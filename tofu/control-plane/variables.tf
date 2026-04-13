@@ -141,3 +141,9 @@ variable "hetzner_object_storage_secret_key" {
   default     = ""
   sensitive   = true
 }
+
+variable "base_domain" {
+  description = "Base domain for email sending (verified in Resend)"
+  type        = string
+  default     = ""
+}
