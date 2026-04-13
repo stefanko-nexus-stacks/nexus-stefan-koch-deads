@@ -54,11 +54,6 @@ resource "cloudflare_workers_script" "scheduled_teardown" {
   }
 
   plain_text_binding {
-    name = "BASE_DOMAIN"
-    text = var.base_domain
-  }
-
-  plain_text_binding {
     name = "ADMIN_EMAIL"
     text = var.admin_email
   }
@@ -143,7 +138,6 @@ resource "cloudflare_pages_project" "control_plane" {
         GITHUB_OWNER                 = var.github_owner
         GITHUB_REPO                  = var.github_repo
         DOMAIN                       = var.domain
-        BASE_DOMAIN                  = var.base_domain
         ADMIN_EMAIL                  = var.admin_email
         USER_EMAIL                   = var.user_email
         SERVER_TYPE                  = var.server_type
@@ -196,7 +190,7 @@ resource "cloudflare_pages_project" "control_plane" {
 
 resource "cloudflare_record" "control_plane" {
   zone_id = var.cloudflare_zone_id
-  name    = "control-stefan-koch-deads"
+  name    = "control"
   content = "${cloudflare_pages_project.control_plane.name}.pages.dev"
   type    = "CNAME"
   proxied = true
@@ -206,7 +200,7 @@ resource "cloudflare_record" "control_plane" {
 resource "cloudflare_pages_domain" "control_plane" {
   account_id   = var.cloudflare_account_id
   project_name = cloudflare_pages_project.control_plane.name
-  domain       = "control-stefan-koch-deads.nona.company"
+  domain       = "control.${var.domain}"
   
   depends_on = [cloudflare_record.control_plane]
 }
@@ -218,7 +212,7 @@ resource "cloudflare_pages_domain" "control_plane" {
 resource "cloudflare_zero_trust_access_application" "control_plane" {
   zone_id          = var.cloudflare_zone_id
   name             = "${local.resource_prefix} Control Plane"
-  domain           = "control-stefan-koch-deads.nona.company"
+  domain           = "control.${var.domain}"
   type             = "self_hosted"
   session_duration = "24h"
 
@@ -229,7 +223,7 @@ resource "cloudflare_zero_trust_access_application" "control_plane" {
   same_site_cookie_attribute = "lax"
   
   cors_headers {
-    allowed_origins   = ["https://control-stefan-koch-deads.nona.company"]
+    allowed_origins   = ["https://control.${var.domain}"]
     allowed_methods   = ["GET", "POST", "OPTIONS"]
     allow_credentials = true
   }
