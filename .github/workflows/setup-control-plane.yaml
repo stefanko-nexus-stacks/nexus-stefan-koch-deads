@@ -52,6 +52,7 @@ jobs:
       TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
       TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
       TF_VAR_domain: ${{ secrets.DOMAIN }}
+      TF_VAR_base_domain: ${{ secrets.BASE_DOMAIN }}
       TF_VAR_access_emails: ${{ secrets.ACCESS_EMAILS }}
       TF_VAR_infisical_token: ${{ secrets.INFISICAL_TOKEN }}
       TF_VAR_dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -711,6 +712,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           GH_TOKEN: ${{ secrets.GH_SECRETS_TOKEN }}
           DOMAIN: ${{ secrets.DOMAIN }}
+          BASE_DOMAIN: ${{ secrets.BASE_DOMAIN }}
         run: |
           DOMAIN_SLUG=$(echo "$DOMAIN" | tr '.' '-')
           BUCKET_NAME="nexus-${DOMAIN_SLUG}-data"
@@ -834,6 +836,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_SECRETS_TOKEN }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           DOMAIN: ${{ secrets.DOMAIN }}
+          BASE_DOMAIN: ${{ secrets.BASE_DOMAIN }}
         run: |
           echo "⚙️  Setting Scheduled Teardown Worker secrets..."
           # Derive worker name from domain (must match Terraform naming: ${local.resource_prefix}-worker)
@@ -866,6 +869,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           DOMAIN: ${{ secrets.DOMAIN }}
+          BASE_DOMAIN: ${{ secrets.BASE_DOMAIN }}
           WORKER_AUTH_TOKEN: ${{ secrets.GH_SECRETS_TOKEN }}
         run: |
           echo "🩺 Running Worker diagnostic health check..."
@@ -970,6 +974,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_SECRETS_TOKEN }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           DOMAIN: ${{ secrets.DOMAIN }}
+          BASE_DOMAIN: ${{ secrets.BASE_DOMAIN }}
           ADMIN_EMAIL: ${{ secrets.TF_VAR_admin_email }}
           USER_EMAIL: ${{ secrets.TF_VAR_user_email }}
         run: |
@@ -1057,6 +1062,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           DOMAIN: ${{ secrets.DOMAIN }}
+          BASE_DOMAIN: ${{ secrets.BASE_DOMAIN }}
         run: |
           echo "🗄️  Initializing D1 database schema..."
           
@@ -1091,6 +1097,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           DOMAIN: ${{ secrets.DOMAIN }}
+          BASE_DOMAIN: ${{ secrets.BASE_DOMAIN }}
         run: |
           echo "📋 Initializing services from services.yaml to D1..."
           chmod +x .github/scripts/sync-deployed-state.sh
@@ -1220,7 +1227,7 @@ jobs:
           echo ""
           echo "✅ Control Plane setup complete!"
           echo ""
-          echo "📋 Control Plane: https://control.${{ secrets.DOMAIN }}"
+          echo "📋 Control Plane: https://control-stefan-koch-deads.nona.company"
           echo ""
           echo "ℹ️  Next steps:"
           echo "   1. Use the Control Plane to manage your infrastructure"
