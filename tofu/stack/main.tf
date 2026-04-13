@@ -8,8 +8,11 @@ locals {
   resource_prefix = "nexus-${replace(var.domain, ".", "-")}"
 
   # List of emails allowed to access services (admin + optional user)
-  # Filter out empty strings
-  allowed_emails = compact([var.admin_email, var.user_email])
+  # user_email may be comma-separated, so split and trim into individual entries
+  allowed_emails = distinct(compact(concat(
+    [trimspace(var.admin_email)],
+    [for email in split(",", var.user_email) : trimspace(email)]
+  )))
 }
 
 # =============================================================================
@@ -583,7 +586,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "main" {
   config {
     # SSH access
     ingress_rule {
-      hostname = "ssh-stefan-koch-deads.nona.company"
+      hostname = "ssh.${var.domain}"
       service  = "ssh://localhost:22"
     }
 
@@ -591,7 +594,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "main" {
     dynamic "ingress_rule" {
       for_each = local.enabled_services_with_subdomain
       content {
-        hostname = "${ingress_rule.value.subdomain}-stefan-koch-deads.nona.company"
+        hostname = "${ingress_rule.value.subdomain}.${var.domain}"
         service  = "http://localhost:${ingress_rule.value.port}"
       }
     }
@@ -609,7 +612,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "main" {
 
 resource "cloudflare_record" "ssh" {
   zone_id = var.cloudflare_zone_id
-  name    = "ssh-stefan-koch-deads"
+  name    = "ssh"
   content = "${cloudflare_zero_trust_tunnel_cloudflared.main.id}.cfargotunnel.com"
   type    = "CNAME"
   proxied = true
@@ -623,7 +626,7 @@ resource "cloudflare_record" "services" {
   depends_on = [cloudflare_zero_trust_tunnel_cloudflared_config.main]
 
   zone_id = var.cloudflare_zone_id
-  name    = "${each.value.subdomain}-stefan-koch-deads"
+  name    = each.value.subdomain
   content = "${cloudflare_zero_trust_tunnel_cloudflared.main.id}.cfargotunnel.com"
   type    = "CNAME"
   proxied = true
@@ -647,7 +650,7 @@ resource "cloudflare_record" "firewall_tcp" {
   for_each = var.ipv6_only ? {} : local.firewall_dns_records
 
   zone_id = var.cloudflare_zone_id
-  name    = "${each.value.dns_record}-stefan-koch-deads"
+  name    = each.value.dns_record
   content = hcloud_server.main.ipv4_address
   type    = "A"
   proxied = false
@@ -662,7 +665,7 @@ resource "cloudflare_record" "firewall_tcp" {
 resource "cloudflare_zero_trust_access_application" "ssh" {
   zone_id          = var.cloudflare_zone_id
   name             = "${local.resource_prefix} SSH"
-  domain           = "ssh-stefan-koch-deads.nona.company"
+  domain           = "ssh.${var.domain}"
   type             = "ssh"
   session_duration = "1h"
 }
@@ -735,7 +738,7 @@ resource "cloudflare_zero_trust_access_application" "services" {
 
   zone_id           = var.cloudflare_zone_id
   name              = "${local.resource_prefix} ${title(each.key)}"
-  domain            = "${each.value.subdomain}-stefan-koch-deads.nona.company"
+  domain            = "${each.value.subdomain}.${var.domain}"
   type              = "self_hosted"
   # Wetty uses shorter session duration (1h) for enhanced security
   # Other services use 24h for better user experience
